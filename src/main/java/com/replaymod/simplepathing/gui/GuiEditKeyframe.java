@@ -255,6 +255,7 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
         public final GuiExpressionField yawField = newGuiExpressionField().setSize(90, 20);
         public final GuiExpressionField pitchField = newGuiExpressionField().setSize(90, 20);
         public final GuiExpressionField rollField = newGuiExpressionField().setSize(90, 20);
+        public final GuiExpressionField fovField = newGuiExpressionField().setSize(90, 20);
 
         public final InterpolationPanel interpolationPanel = new InterpolationPanel();
 
@@ -267,7 +268,9 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
                             new GuiLabel().setI18nText("replaymod.gui.editkeyframe.ypos"), yField,
                             new GuiLabel().setI18nText("replaymod.gui.editkeyframe.campitch"), pitchField,
                             new GuiLabel().setI18nText("replaymod.gui.editkeyframe.zpos"), zField,
-                            new GuiLabel().setI18nText("replaymod.gui.editkeyframe.camroll"), rollField);
+                            new GuiLabel().setI18nText("replaymod.gui.editkeyframe.camroll"), rollField,
+                            new GuiLabel().setI18nText("replaymod.gui.editkeyframe.fov"), fovField);
+
 
             inputs.setLayout(new VerticalLayout().setSpacing(10)).addElements(new VerticalLayout.Data(0.5, false),
                     positionInputs, interpolationPanel);
@@ -289,12 +292,17 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
                 rollField.setText(df.format(rot.getRight()));
             });
 
+            this.keyframe.getValue(CameraProperties.FOV).ifPresent(rot -> {
+                fovField.setText(df.format(rot.getLeft()));
+            });
+
             xField.onTextChanged(updateSaveButtonState);
             yField.onTextChanged(updateSaveButtonState);
             zField.onTextChanged(updateSaveButtonState);
             yawField.onTextChanged(updateSaveButtonState);
             pitchField.onTextChanged(updateSaveButtonState);
             rollField.onTextChanged(updateSaveButtonState);
+            fovField.onTextChanged(updateSaveButtonState);
 
             link(xField, yField, zField, yawField, pitchField, rollField, timeMinField, timeSecField, timeMSecField);
 
@@ -309,7 +317,8 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
                     zField.setPrecision(14).isExpressionValid() &&
                     yawField.setPrecision(11).isExpressionValid() &&
                     pitchField.setPrecision(11).isExpressionValid() &&
-                    rollField.setPrecision(11).isExpressionValid()){
+                    rollField.setPrecision(11).isExpressionValid() &&
+                    fovField.setPrecision(11).isExpressionValid()){
                 return super.canSave();
             } else {
                 return false;
@@ -325,9 +334,11 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
             float yaw = yawField.setPrecision(11).getFloat();
             float pitch = pitchField.setPrecision(11).getFloat();
             float roll = rollField.setPrecision(11).getFloat();
+            float fov = fovField.setPrecision(11).getFloat();
 
             SPTimeline timeline = guiPathing.getMod().getCurrentTimeline();
-            Change positionChange = timeline.updatePositionKeyframe(time, x, y, z, yaw, pitch, roll);
+            Change positionChange = timeline.updatePositionKeyframe(time, x, y, z, yaw, pitch, roll, fov);
+			
             if (interpolationPanel.getSettingsPanel() == null) {
                 // The last keyframe doesn't have interpolator settings because there is no segment following it
                 return positionChange;
