@@ -145,7 +145,7 @@ public class CameraProperties extends AbstractPropertyGroup {
                 } else {
                     fov = Math.toDegrees(Math.atan(1/value.getLeft()));
                 }
-                cameraEntity.setFov(fov);
+                cameraEntity.setFov((float) fov);
             }
         }
 
