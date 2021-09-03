@@ -173,7 +173,7 @@ public class SPTimeline implements PathingRegistry {
         UpdateKeyframeProperties.Builder builder = UpdateKeyframeProperties.create(path, keyframe);
         builder.setValue(CameraProperties.POSITION, Triple.of(posX, posY, posZ));
         builder.setValue(CameraProperties.ROTATION, Triple.of(yaw, pitch, roll));
-        builder.setValue(CameraProperties.FOV, Triple.of(fov, fov, fov));
+        builder.setValue(CameraProperties.FOV, Triple.of((float) (1/Math.tan(Math.toRadians(fov))), 0f, 0f));
         if (spectated != -1) {
             builder.setValue(SpectatorProperty.PROPERTY, spectated);
         }
@@ -558,7 +558,7 @@ public class SPTimeline implements PathingRegistry {
                     changes.add(UpdateKeyframeProperties.create(positionPath, keyframe)
                             .setValue(CameraProperties.POSITION, Triple.of(expected.getX(), expected.getY(), expected.getZ()))
                             .setValue(CameraProperties.ROTATION, Triple.of(expected.getYaw(), expected.getPitch(), 0f))
-                            .setValue(CameraProperties.FOV, Triple.of((float) MCVer.getMinecraft().options.fov, 0f, 0f)).done()
+                            .setValue(CameraProperties.FOV, Triple.of((float) Math.tan(Math.toRadians(MCVer.getMinecraft().options.fov)), 0f, 0f)).done()
                     );
                 }
             }

@@ -292,8 +292,15 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
                 rollField.setText(df.format(rot.getRight()));
             });
 
-            this.keyframe.getValue(CameraProperties.FOV).ifPresent(rot -> {
-                fovField.setText(df.format(rot.getLeft()));
+            this.keyframe.getValue(CameraProperties.FOV).ifPresent(val -> {
+                double fov;
+                if(val.getLeft()<0){
+                    fov = Math.toDegrees(Math.atan(1/val.getLeft())+Math.PI);
+                } else {
+                    fov = Math.toDegrees(Math.atan(1/val.getLeft()));
+                }
+
+                fovField.setText(df.format(fov));
             });
 
             xField.onTextChanged(updateSaveButtonState);
@@ -337,7 +344,7 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
             float fov = fovField.setPrecision(11).getFloat();
 
             SPTimeline timeline = guiPathing.getMod().getCurrentTimeline();
-            Change positionChange = timeline.updatePositionKeyframe(time, x, y, z, yaw, pitch, roll, fov);
+            Change positionChange = timeline.updatePositionKeyframe(time, x, y, z, yaw, pitch, roll, (float) (1/Math.tan(Math.toRadians(fov))));
 			
             if (interpolationPanel.getSettingsPanel() == null) {
                 // The last keyframe doesn't have interpolator settings because there is no segment following it

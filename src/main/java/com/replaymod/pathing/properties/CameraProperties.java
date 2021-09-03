@@ -139,7 +139,13 @@ public class CameraProperties extends AbstractPropertyGroup {
             handler.spectateCamera();
             CameraEntity cameraEntity = handler.getCameraEntity();
             if (cameraEntity != null) {
-                cameraEntity.setFov(value.getLeft());
+                double fov;
+                if(value.getLeft()<0){
+                    fov = Math.toDegrees(Math.atan(1/value.getLeft())+Math.PI);
+                } else {
+                    fov = Math.toDegrees(Math.atan(1/value.getLeft()));
+                }
+                cameraEntity.setFov(fov);
             }
         }
 

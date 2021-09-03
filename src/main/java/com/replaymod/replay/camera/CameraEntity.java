@@ -232,7 +232,7 @@ public class CameraEntity
      * Sets the camera fov to the specified fov
      * @param fov The fov to set
      */
-    public void setFov(Float fov) {
+    public void setFov(Double fov) {
         getMinecraft().options.fov = fov;
         getMinecraft().worldRenderer.scheduleTerrainUpdate();
     }
