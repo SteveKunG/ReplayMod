@@ -95,11 +95,11 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
 
     protected boolean canSave() {
         try {
-            long timeMin = timeMinField.getLong();
-            long timeSec = timeSecField.getLong();
-            long timeMSec = timeMSecField.getLong();
+            double timeMin = timeMinField.getDouble();
+            double timeSec = timeSecField.getDouble();
+            double timeMSec = timeMSecField.getDouble();
 
-            long newTime = (timeMin * 60 + timeSec) * 1000 + timeMSec;
+            long newTime = (long) ((timeMin * 60 + timeSec) * 1000 + timeMSec);
 
             if (newTime < 0 || newTime > guiPathing.kt.getTimeline().getLengthMillis()) {
                 return false;
@@ -122,12 +122,12 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
 
         title.setI18nText("replaymod.gui.editkeyframe.title." + type);
         saveButton.onClick(() -> {
-            long timeMin = timeMinField.getLong();
-            long timeSec = timeSecField.getLong();
-            long timeMSec = timeMSecField.getLong();
+            double timeMin = timeMinField.getDouble();
+            double timeSec = timeSecField.getDouble();
+            double timeMSec = timeMSecField.getDouble();
 
             Change change = save();
-            long newTime = (timeMin * 60 + timeSec) * 1000 + timeMSec;
+            long newTime = (long) ((timeMin * 60 + timeSec) * 1000 + timeMSec);
             if (newTime != time) {
                 change = CombinedChange.createFromApplied(change,
                         gui.getMod().getCurrentTimeline().moveKeyframe(path, time, newTime));
@@ -213,9 +213,9 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
         @Override
         protected Change save() throws Expression.ExpressionException, ArithmeticException, NumberFormatException {
 
-            long timeMin = timestampMinField.getLong();
-            long timeSec = timestampSecField.getLong();
-            long timeMSec = timestampMSecField.getLong();
+            double timeMin = timestampMinField.getDouble();
+            double timeSec = timestampSecField.getDouble();
+            double timeMSec = timestampMSecField.getDouble();
 
             int time = (int) ((timeMin * 60 + timeSec) * 1000 + timeMSec);
 
@@ -227,11 +227,11 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
         protected boolean canSave(){
             try {
 
-                long timeMin = timestampMinField.getLong();
-                long timeSec = timestampSecField.getLong();
-                long timeMSec = timestampMSecField.getLong();
+                double timeMin = timestampMinField.getDouble();
+                double timeSec = timestampSecField.getDouble();
+                double timeMSec = timestampMSecField.getDouble();
 
-                long time = (timeMin * 60 + timeSec) * 1000 + timeMSec;
+                long time = (long) ((timeMin * 60 + timeSec) * 1000 + timeMSec);
 
                 if (time < 0) { //TODO add check to make sure time isn't longer than the replay
                     return false;
@@ -255,6 +255,7 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
         public final GuiExpressionField yawField = newGuiExpressionField().setSize(90, 20);
         public final GuiExpressionField pitchField = newGuiExpressionField().setSize(90, 20);
         public final GuiExpressionField rollField = newGuiExpressionField().setSize(90, 20);
+        public final GuiExpressionField fovField = newGuiExpressionField().setSize(90, 20);
 
         public final InterpolationPanel interpolationPanel = new InterpolationPanel();
 
@@ -267,7 +268,9 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
                             new GuiLabel().setI18nText("replaymod.gui.editkeyframe.ypos"), yField,
                             new GuiLabel().setI18nText("replaymod.gui.editkeyframe.campitch"), pitchField,
                             new GuiLabel().setI18nText("replaymod.gui.editkeyframe.zpos"), zField,
-                            new GuiLabel().setI18nText("replaymod.gui.editkeyframe.camroll"), rollField);
+                            new GuiLabel().setI18nText("replaymod.gui.editkeyframe.camroll"), rollField,
+                            new GuiLabel().setI18nText("replaymod.gui.editkeyframe.fov"), fovField);
+
 
             inputs.setLayout(new VerticalLayout().setSpacing(10)).addElements(new VerticalLayout.Data(0.5, false),
                     positionInputs, interpolationPanel);
@@ -289,12 +292,24 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
                 rollField.setText(df.format(rot.getRight()));
             });
 
+            this.keyframe.getValue(CameraProperties.FOV).ifPresent(val -> {
+                double fov;
+                if(val.getLeft()<0){
+                    fov = Math.toDegrees(Math.atan(1/val.getLeft())+Math.PI);
+                } else {
+                    fov = Math.toDegrees(Math.atan(1/val.getLeft()));
+                }
+
+                fovField.setText(df.format(fov));
+            });
+
             xField.onTextChanged(updateSaveButtonState);
             yField.onTextChanged(updateSaveButtonState);
             zField.onTextChanged(updateSaveButtonState);
             yawField.onTextChanged(updateSaveButtonState);
             pitchField.onTextChanged(updateSaveButtonState);
             rollField.onTextChanged(updateSaveButtonState);
+            fovField.onTextChanged(updateSaveButtonState);
 
             link(xField, yField, zField, yawField, pitchField, rollField, timeMinField, timeSecField, timeMSecField);
 
@@ -309,7 +324,8 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
                     zField.setPrecision(14).isExpressionValid() &&
                     yawField.setPrecision(11).isExpressionValid() &&
                     pitchField.setPrecision(11).isExpressionValid() &&
-                    rollField.setPrecision(11).isExpressionValid()){
+                    rollField.setPrecision(11).isExpressionValid() &&
+                    fovField.setPrecision(11).isExpressionValid()){
                 return super.canSave();
             } else {
                 return false;
@@ -325,9 +341,11 @@ public abstract class GuiEditKeyframe<T extends GuiEditKeyframe<T>> extends Abst
             float yaw = yawField.setPrecision(11).getFloat();
             float pitch = pitchField.setPrecision(11).getFloat();
             float roll = rollField.setPrecision(11).getFloat();
+            float fov = fovField.setPrecision(11).getFloat();
 
             SPTimeline timeline = guiPathing.getMod().getCurrentTimeline();
-            Change positionChange = timeline.updatePositionKeyframe(time, x, y, z, yaw, pitch, roll);
+            Change positionChange = timeline.updatePositionKeyframe(time, x, y, z, yaw, pitch, roll, (float) (1/Math.tan(Math.toRadians(fov))));
+			
             if (interpolationPanel.getSettingsPanel() == null) {
                 // The last keyframe doesn't have interpolator settings because there is no segment following it
                 return positionChange;
